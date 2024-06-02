@@ -1,30 +1,37 @@
 package workhub
 
 import (
+	"fmt"
 	"time"
 
-	"tdp-cloud/helper/logman"
+	"github.com/opentdp/go-helper/logman"
+	"github.com/opentdp/go-helper/socket"
 )
 
-func (pod *SendPod) Stat() (uint, error) {
+func (pod *SendPod) Stat() (string, error) {
 
-	logman.Info("Stat:send", "to", pod.WorkerMeta.HostName)
+	var (
+		err    error
+		taskId = uint(time.Now().UnixNano())
+	)
 
-	taskId := uint(time.Now().Unix())
+	logman.Info("stat:send", "to", pod.WorkerMeta.HostName)
 
-	err := pod.WriteJson(&SocketData{
+	err = pod.WriteJson(&socket.PlainData{
 		Method: "Stat",
 		TaskId: taskId,
 	})
 
-	return taskId, err
+	id := "stat" + fmt.Sprintf("%d", taskId)
+	return id, err
 
 }
 
-func (pod *RespPod) Stat(rq *SocketData) {
+func (pod *RespPod) Stat(rs *socket.PlainData) {
 
-	logman.Info("Stat:resp", "from", pod.WorkerMeta.HostName)
+	logman.Info("stat:resp", "from", pod.WorkerMeta.HostName)
 
-	workerResp[rq.TaskId] = rq.Payload
+	id := "stat" + fmt.Sprintf("%d", rs.TaskId)
+	workerResp[id] = rs
 
 }

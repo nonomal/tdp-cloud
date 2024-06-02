@@ -1,41 +1,46 @@
 package workhub
 
 import (
+	"runtime"
+
 	"github.com/gin-gonic/gin"
-	"github.com/spf13/cast"
+	"github.com/opentdp/go-helper/command"
+	"github.com/opentdp/go-helper/psutil"
+	"github.com/opentdp/go-helper/strutil"
 	"golang.org/x/net/websocket"
 
-	"tdp-cloud/helper/command"
-	"tdp-cloud/module/model/user"
+	"tdp-cloud/model/user"
+	"tdp-cloud/module/fsadmin"
 	"tdp-cloud/module/workhub"
 )
 
-// 节点列表
+type Controller struct{}
 
-func list(c *gin.Context) {
+// 主机状态
 
-	userId := c.GetUint("UserId")
-	lst := workhub.WorkerOfUser(userId)
+func (*Controller) detail(c *gin.Context) {
 
-	c.Set("Payload", gin.H{"Items": lst})
+	c.Set("Payload", gin.H{
+		"Stat":         psutil.Detail(true),
+		"MemStat":      psutil.GoMemory(),
+		"NumGoroutine": runtime.NumGoroutine(),
+	})
 
 }
 
-// 节点状态
+// 管理文件
 
-func detail(c *gin.Context) {
+func (*Controller) filer(c *gin.Context) {
 
-	workerId := c.Param("id")
-	send := workhub.NewSender(workerId)
+	var rq *fsadmin.FilerParam
 
-	if send == nil {
-		c.Set("Error", "客户端已断开连接")
+	if err := c.ShouldBind(&rq); err != nil {
+		c.Set("Error", err)
 		return
 	}
 
-	if id, err := send.Stat(); err == nil {
-		stat := workhub.WaitResponse(id, 30)
-		c.Set("Payload", gin.H{"Stat": stat})
+	if lst, err := fsadmin.Filer(rq); err == nil {
+		c.Set("Payload", gin.H{"Items": lst})
 	} else {
 		c.Set("Error", err)
 	}
@@ -44,15 +49,7 @@ func detail(c *gin.Context) {
 
 // 执行脚本
 
-func exec(c *gin.Context) {
-
-	workerId := c.Param("id")
-	send := workhub.NewSender(workerId)
-
-	if send == nil {
-		c.Set("Error", "客户端已断开连接")
-		return
-	}
+func (*Controller) exec(c *gin.Context) {
 
 	var rq *command.ExecPayload
 
@@ -61,38 +58,47 @@ func exec(c *gin.Context) {
 		return
 	}
 
-	if id, err := send.Exec(rq); err == nil {
-		c.Set("Payload", gin.H{"Id": id})
-		c.Set("Message", "下发完成")
+	if ret, err := command.Exec(rq); err == nil {
+		c.Set("Payload", ret)
 	} else {
 		c.Set("Error", err)
 	}
 
 }
 
+// 节点列表
+
+func (*Controller) list(c *gin.Context) {
+
+	userId := c.GetUint("UserId")
+	lst := workhub.WorkerOfUser(userId)
+
+	c.Set("Payload", gin.H{"Items": lst})
+
+}
+
 // 注册节点
 
-func register(c *gin.Context) {
+func (*Controller) join(c *gin.Context) {
 
-	ur, err := user.Fetch(&user.FetchParam{
+	usr, err := user.Fetch(&user.FetchParam{
 		AppId: c.Param("auth"),
 	})
 
-	if err != nil || ur.Id == 0 {
+	if err != nil || usr.Id == 0 {
 		c.Set("Error", "授权失败")
 		return
 	}
 
-	c.Set("UserId", ur.Id)
-	c.Set("MachineId", cast.ToUint(c.Param("mid")))
+	rq := &workhub.ConnectParam{
+		UserId:    usr.Id,
+		MachineId: strutil.ToUint(c.Param("mid")),
+	}
 
 	// 创建 Worker 会话
 
 	h := websocket.Handler(func(ws *websocket.Conn) {
-		err := workhub.Connect(ws, &workhub.ConnectParam{
-			UserId:    c.GetUint("UserId"),
-			MachineId: c.GetUint("MachineId"),
-		})
+		err := workhub.Connect(ws, rq)
 		c.Set("Error", err)
 	})
 

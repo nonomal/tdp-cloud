@@ -1,14 +1,18 @@
 package script
 
 import (
+	"strings"
+
 	"github.com/gin-gonic/gin"
 
-	"tdp-cloud/module/model/script"
+	"tdp-cloud/model/script"
 )
+
+type Controller struct{}
 
 // 脚本列表
 
-func list(c *gin.Context) {
+func (*Controller) list(c *gin.Context) {
 
 	var rq *script.FetchAllParam
 
@@ -29,7 +33,7 @@ func list(c *gin.Context) {
 
 // 获取脚本
 
-func detail(c *gin.Context) {
+func (*Controller) detail(c *gin.Context) {
 
 	var rq *script.FetchParam
 
@@ -55,7 +59,7 @@ func detail(c *gin.Context) {
 
 // 添加脚本
 
-func create(c *gin.Context) {
+func (*Controller) create(c *gin.Context) {
 
 	var rq *script.CreateParam
 
@@ -65,6 +69,7 @@ func create(c *gin.Context) {
 	}
 
 	rq.UserId = c.GetUint("UserId")
+	rq.Content = strings.TrimSpace(rq.Content)
 
 	if id, err := script.Create(rq); err == nil {
 		c.Set("Payload", gin.H{"Id": id})
@@ -77,7 +82,7 @@ func create(c *gin.Context) {
 
 // 修改脚本
 
-func update(c *gin.Context) {
+func (*Controller) update(c *gin.Context) {
 
 	var rq *script.UpdateParam
 
@@ -92,6 +97,7 @@ func update(c *gin.Context) {
 	}
 
 	rq.UserId = c.GetUint("UserId")
+	rq.Content = strings.TrimSpace(rq.Content)
 
 	if err := script.Update(rq); err == nil {
 		c.Set("Message", "更新成功")
@@ -103,7 +109,7 @@ func update(c *gin.Context) {
 
 // 删除脚本
 
-func delete(c *gin.Context) {
+func (*Controller) delete(c *gin.Context) {
 
 	var rq *script.DeleteParam
 

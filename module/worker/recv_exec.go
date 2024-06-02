@@ -1,45 +1,44 @@
 package worker
 
 import (
-	"errors"
+	"strings"
 
-	"github.com/mitchellh/mapstructure"
-
-	"tdp-cloud/helper/command"
-	"tdp-cloud/helper/logman"
+	"github.com/opentdp/go-helper/command"
+	"github.com/opentdp/go-helper/logman"
+	"github.com/opentdp/go-helper/socket"
 )
 
-func (pod *RecvPod) Exec(rs *SocketData) error {
+func (pod *RecvPod) Exec(rq *socket.PlainData) error {
 
 	var (
 		err  error
+		msg  string
 		ret  string
-		data *command.ExecPayload
+		data command.ExecPayload
 	)
 
-	logman.Info("Exec:recv", "payload", rs.Payload)
+	logman.Info("exec:recv", "payload", rq.Payload)
 
-	if mapstructure.Decode(rs.Payload, &data) == nil {
-		ret, err = command.Exec(data)
-	} else {
-		err = errors.New("无法解析请求参数")
+	if err = rq.GetPayload(&data); err == nil {
+		ret, err = command.Exec(&data)
 	}
 
 	if err != nil {
-		logman.Error("Exec:fail", "error", err)
+		msg = err.Error()
+		logman.Error("exec:fail", "error", err)
 	} else {
-		logman.Info("Exec:done", "name", data.Name)
+		logman.Info("exec:done", "name", data.Name)
 	}
 
-	err = pod.WriteJson(&SocketData{
+	ret = strings.TrimSpace(ret)
+	err = pod.WriteJson(&socket.PlainData{
 		Method:  "Exec:resp",
-		TaskId:  rs.TaskId,
+		TaskId:  rq.TaskId,
 		Success: err == nil,
-		Payload: map[string]any{
-			"Output": ret,
-			"Error":  err,
-		},
+		Message: msg,
+		Payload: ret,
 	})
 
 	return err
+
 }

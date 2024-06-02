@@ -1,32 +1,41 @@
 package subset
 
 import (
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"flag"
 
+	"tdp-cloud/cmd/parse"
 	"tdp-cloud/service"
 )
 
-var workerAct string
+var workerYaml string
 
-var workerCmd = &cobra.Command{
-	Use:   "worker",
-	Short: "子节点管理",
-	Run: func(cmd *cobra.Command, args []string) {
-		service.Control("worker", workerAct)
-	},
+func workerFlag() *FlagSet {
+
+	var action string
+
+	command := &FlagSet{
+		FlagSet: flag.NewFlagSet("worker", flag.ExitOnError),
+		Comment: "TDP Cloud Worker Management",
+		Execute: func() {
+			workerExec(action)
+		},
+	}
+
+	command.StringVar(&action, "s", "", "management worker service")
+	command.StringVar(&workerYaml, "c", "", "config file path")
+
+	return command
+
 }
 
-func WithWorker() *cobra.Command {
+func workerExec(act string) {
 
-	workerCmd.Flags().BoolP("help", "h", false, "查看帮助")
-	workerCmd.Flags().MarkHidden("help")
+	c := parse.WorkerConfig(workerYaml)
 
-	workerCmd.Flags().StringVarP(&workerAct, "service", "s", "", "管理系统服务")
-	workerCmd.Flags().StringP("remote", "r", "", "注册地址 (e.g. ws://{domain}/wsi/{appid}/worker)")
+	if act == "" || act == "start" {
+		c.Save()
+	}
 
-	viper.BindPFlag("worker.remote", workerCmd.Flags().Lookup("remote"))
-
-	return workerCmd
+	service.Control("worker", act)
 
 }

@@ -3,45 +3,26 @@ package worker
 import (
 	"time"
 
-	"github.com/kardianos/service"
+	"github.com/opentdp/go-helper/logman"
 
 	"tdp-cloud/module/worker"
 )
 
-type program struct{}
+func origin() {
 
-func (p *program) Start(s service.Service) error {
-
-	svclog.Info("TDP Worker start")
-
-	go p.run()
-	return nil
-
-}
-
-func (p *program) Stop(s service.Service) error {
-
-	svclog.Info("TDP Worker stop")
-
-	return nil
-
-}
-
-func (p *program) run() {
-
-	defer p.timer()
+	defer timer()
 
 	if err := worker.Connect(); err != nil {
-		svclog.Error(err)
+		logman.Error(err.Error())
 	}
 
 }
 
-func (p *program) timer() {
+func timer() {
 
-	svclog.Warning("Connection disconnected, retry in 15 seconds.")
+	logman.Warn("Connection disconnected, retry in 15 seconds")
 
 	time.Sleep(15 * time.Second)
-	p.run()
+	origin()
 
 }

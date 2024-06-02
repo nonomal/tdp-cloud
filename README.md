@@ -1,6 +1,6 @@
 # 土豆片控制面板
 
-[![TDP Cloud Builder](https://github.com/open-tdp/tdp-cloud/actions/workflows/release.yml/badge.svg)](https://github.com/open-tdp/tdp-cloud/actions/workflows/release.yml)
+[![TDP Cloud Builder](https://github.com/opentdp/tdp-cloud/actions/workflows/release.yml/badge.svg)](https://github.com/opentdp/tdp-cloud/actions/workflows/release.yml)
 
 可以跨平台部署的云资源管理面板
 
@@ -39,19 +39,31 @@
 
 ## 使用指引
 
-内容较多，请参考文档 <https://cloud.opentdp.org/docs>
+内容较多，请参考文档 <https://docs.opentdp.org>
 
 ## 功能预览
 
-- 功能支持和开发进度，请参阅 [Issues #1](https://github.com/open-tdp/tdp-cloud/issues/1)
+- 功能支持和开发进度，请参阅 [Issues #1](https://github.com/opentdp/tdp-cloud/issues/1)
 
-- 在线体验开发版功能，请进入 [演示站点](https://cloud.opentdp.org/preview)，自行注册账号后登录
+- 在线体验开发版功能，请进入 [演示站点](https://cloud.opentdp.org)，自行注册账号后登录
 
 ## 开发说明
+
+### 初始化开发环境
+
+```shell
+go env -w GO111MODULE=on
+go env -w GOPROXY=https://goproxy.cn,direct
+go mod tidy
+```
 
 ### 启动开发服务
 
 在项目目录运行  `serve.bat` 或 `./serve.sh`
+
+### 编译为二进制
+
+在项目目录运行 `build.bat` 或 `./build.sh`。你还可以下载 [稳定版](https://cloud.opentdp.org/files)
 
 ### 提交代码时请使用下面标识
 
@@ -67,27 +79,14 @@
 
 > 自 **v0.5.0** 起，`git commit` 描述请以 **标识+半角冒号+空格** 开头，即 `<type>: <subject>`
 
-### 编译为二进制
-
-在项目目录运行 `build.bat` 或 `./build.sh`。你还可以下载 [稳定版](https://cloud.opentdp.org/files)
-
-### 额外参数设置
-
-如果项目无法运行或编译，请尝试设置系统环境变量或临时环境变量
-
-```shell
-go env -w GO111MODULE=on
-go env -w GOPROXY=https://goproxy.cn,direct
-```
-
 ## 微信交流群
 
-扫码添加开发者好友（请备注 `Open TDP`，不备注可能无法通过好友申请）
+扫码添加开发者好友（请备注 `OpenTDP`，不备注可能无法通过好友申请）
 
-![](./docs/weixin-qr.jpg)
+![扫码加群](https://docs.opentdp.org/static/weixin-qr.jpg)
 
 ## 其他
 
 License [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.txt)
 
-Copyright (c) 2022 - 2023 Open TDP
+Copyright (c) 2022 - 2023 OpenTDP

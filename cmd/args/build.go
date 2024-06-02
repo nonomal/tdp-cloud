@@ -1,15 +1,19 @@
 package args
 
-import (
-	"embed"
-)
+// 版本信息
 
-var Efs *embed.FS
+const Version = "0.15.2"
+const BuildVersion = "231205"
 
-const Version = "0.12.0"
-const BuildVersion = "202303"
+// 更新地址
 
-const ReadmeText = `土豆片控制面板
+const UpdateUrl = "https://get.opentdp.org/update/cloud"
 
-开源项目 https://github.com/open-tdp/tdp-cloud
-问题提交 https://github.com/open-tdp/tdp-cloud/issues`
+// 应用描述
+
+const AppName = "TDP CLoud"
+const AppSummary = "可以跨平台部署的云资源管理面板"
+
+const ReadmeText = `
+TDP Website: https://www.opentdp.org
+Open Source: https://github.com/opentdp`

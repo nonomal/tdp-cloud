@@ -2,12 +2,10 @@ package worker
 
 import (
 	"github.com/kardianos/service"
+	"github.com/opentdp/go-helper/logman"
 
 	"tdp-cloud/cmd/args"
-	"tdp-cloud/helper/logman"
 )
-
-var svclog service.Logger
 
 func Service(param []string) service.Service {
 
@@ -24,14 +22,38 @@ func Service(param []string) service.Service {
 
 	svc, err := service.New(&program{}, config)
 	if err != nil {
-		logman.Fatal("Init service failed", "error", err)
-	}
-
-	svclog, err = svc.Logger(nil)
-	if err != nil {
-		logman.Fatal("Init service failed", "error", err)
+		logman.Fatal("init service failed", "error", err)
 	}
 
 	return svc
+
+}
+
+// service program
+
+type program struct{}
+
+func (p *program) Start(s service.Service) error {
+
+	if logger, err := s.Logger(nil); err == nil {
+		logger.Info("TDP Worker start")
+	} else {
+		logman.Info("TDP Worker start")
+	}
+
+	go origin()
+	return nil
+
+}
+
+func (p *program) Stop(s service.Service) error {
+
+	if logger, err := s.Logger(nil); err == nil {
+		logger.Info("TDP Worker stop")
+	} else {
+		logman.Info("TDP Worker stop")
+	}
+
+	return nil
 
 }

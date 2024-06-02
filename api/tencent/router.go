@@ -8,20 +8,22 @@ import (
 
 func Router(api *gin.RouterGroup) {
 
+	ctrl := &Controller{}
+
 	rg := api.Group("/tencent")
 
 	// 匿名接口
 
 	{
-		rg.GET("/vnc", vncProxy)
+		rg.GET("/vnc", ctrl.vncProxy)
 	}
 
 	// 需授权接口
 
-	rg.Use(midware.AuthGuard())
+	rg.Use(midware.AuthGuard)
 
 	{
-		rg.POST("/:id", apiProxy)
+		rg.POST("/:id", ctrl.apiProxy)
 	}
 
 }

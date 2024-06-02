@@ -1,17 +1,21 @@
 package workhub
 
 import (
-	"tdp-cloud/helper/command"
-	"tdp-cloud/helper/logman"
+	"github.com/opentdp/go-helper/command"
+	"github.com/opentdp/go-helper/logman"
+	"github.com/opentdp/go-helper/socket"
 )
 
 func (pod *SendPod) Exec(data *command.ExecPayload) (uint, error) {
 
-	logman.Info("Exec:send", "to", pod.WorkerMeta.HostName)
+	var (
+		err    error
+		taskId = createHistory(pod.Worker, data)
+	)
 
-	taskId := createHistory(pod, data)
+	logman.Info("exec:send", "to", pod.WorkerMeta.HostName)
 
-	err := pod.WriteJson(&SocketData{
+	err = pod.WriteJson(&socket.PlainData{
 		Method:  "Exec",
 		TaskId:  taskId,
 		Payload: data,
@@ -21,10 +25,12 @@ func (pod *SendPod) Exec(data *command.ExecPayload) (uint, error) {
 
 }
 
-func (pod *RespPod) Exec(rq *SocketData) {
+func (pod *RespPod) Exec(rs *socket.PlainData) {
 
-	logman.Info("Exec:resp", "from", pod.WorkerMeta.HostName)
+	logman.Info("exec:resp", "from", pod.WorkerMeta.HostName)
 
-	updateHistory(pod, rq)
+	if err := updateHistory(pod.Worker, rs); err != nil {
+		logman.Error("exec:resp", "error", err)
+	}
 
 }

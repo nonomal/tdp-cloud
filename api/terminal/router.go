@@ -8,12 +8,14 @@ import (
 
 func Socket(wsi *gin.RouterGroup) {
 
+	ctrl := &Controller{}
+
 	rg := wsi.Group("/terminal")
 
-	rg.Use(midware.AuthGuard())
+	rg.Use(midware.AuthGuard)
 
 	{
-		rg.GET("/ssh/:id", ssh)
+		rg.GET("/ssh/:id", ctrl.ssh)
 	}
 
 }

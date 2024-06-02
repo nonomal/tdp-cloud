@@ -1,20 +1,23 @@
 package tencent
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/spf13/cast"
+	"github.com/opentdp/go-helper/strutil"
+	"github.com/opentdp/go-helper/tencent"
 
-	"tdp-cloud/helper/tencent"
-	"tdp-cloud/module/model/vendor"
+	"tdp-cloud/cmd/args"
+	"tdp-cloud/model/vendor"
 )
 
-func apiProxy(c *gin.Context) {
+type Controller struct{}
+
+func (*Controller) apiProxy(c *gin.Context) {
 
 	rq := &vendor.FetchParam{
-		Id:       cast.ToUint(c.Param("id")),
+		Id:       strutil.ToUint(c.Param("id")),
 		UserId:   c.GetUint("UserId"),
 		StoreKey: c.GetString("AppKey"),
 	}
@@ -24,9 +27,9 @@ func apiProxy(c *gin.Context) {
 		return
 	}
 
-	vd, err := vendor.Fetch(rq)
+	vdr, err := vendor.Fetch(rq)
 
-	if err != nil || vd.Id == 0 {
+	if err != nil || vdr.Id == 0 {
 		c.Set("Error", "厂商不存在")
 		return
 	}
@@ -34,8 +37,9 @@ func apiProxy(c *gin.Context) {
 	// 构造参数
 
 	param := &tencent.ReqeustParam{
-		SecretId:  vd.SecretId,
-		SecretKey: vd.SecretKey,
+		SecretId:  vdr.SecretId,
+		SecretKey: vdr.SecretKey,
+		Debug:     args.Debug,
 	}
 
 	if err = c.ShouldBind(param); err != nil {
@@ -53,7 +57,7 @@ func apiProxy(c *gin.Context) {
 
 }
 
-func vncProxy(c *gin.Context) {
+func (*Controller) vncProxy(c *gin.Context) {
 
 	resp, err := http.Get("https://img.qcloud.com/qcloud/app/active_vnc/index.html")
 
@@ -62,7 +66,7 @@ func vncProxy(c *gin.Context) {
 		return
 	}
 
-	if res, err := ioutil.ReadAll(resp.Body); err == nil {
+	if res, err := io.ReadAll(resp.Body); err == nil {
 		c.Set("HTML", string(res))
 	} else {
 		c.Set("Error", err)

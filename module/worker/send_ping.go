@@ -1,28 +1,29 @@
 package worker
 
 import (
-	"tdp-cloud/helper/logman"
-	"tdp-cloud/helper/psutil"
+	"github.com/opentdp/go-helper/logman"
+	"github.com/opentdp/go-helper/psutil"
+	"github.com/opentdp/go-helper/socket"
 )
 
 func (pod *SendPod) Ping() (uint, error) {
 
-	logman.Info("Ping:send")
+	var err error
 
-	stat := psutil.Summary(true)
+	logman.Info("ping:send")
 
-	err := pod.WriteJson(&SocketData{
+	err = pod.WriteJson(&socket.PlainData{
 		Method:  "Ping",
 		TaskId:  0,
-		Payload: stat,
+		Payload: psutil.Summary(true),
 	})
 
 	return 0, err
 
 }
 
-func (pod *RespPod) Ping(rs *SocketData) {
+func (pod *RespPod) Ping(rs *socket.PlainData) {
 
-	logman.Info("Ping:resp", "payload", rs.Payload)
+	logman.Info("ping:resp", "payload", rs.Payload)
 
 }

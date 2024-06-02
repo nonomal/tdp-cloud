@@ -1,14 +1,15 @@
 package migrator
 
 import (
-	"tdp-cloud/helper/logman"
-	"tdp-cloud/module/model/migration"
+	"github.com/opentdp/go-helper/logman"
+
+	"tdp-cloud/model/migration"
 )
 
 func Deploy() {
 
 	if err := doMigrate(); err != nil {
-		logman.Fatal("Migrate database failed", "error", err)
+		logman.Fatal("migrate database failed", "error", err)
 	}
 
 }
@@ -27,8 +28,8 @@ func isMigrated(k string) bool {
 
 	rq := &migration.FetchParam{Version: k}
 
-	if rs, err := migration.Fetch(rq); err == nil {
-		return rs.Id > 0
+	if ret, err := migration.Fetch(rq); err == nil {
+		return ret.Id > 0
 	}
 
 	return false

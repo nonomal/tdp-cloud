@@ -8,12 +8,14 @@ import (
 
 func Router(api *gin.RouterGroup) {
 
+	ctrl := &Controller{}
+
 	rg := api.Group("/cloudflare")
 
-	rg.Use(midware.AuthGuard())
+	rg.Use(midware.AuthGuard)
 
 	{
-		rg.POST("/:id", apiProxy)
+		rg.POST("/:id", ctrl.apiProxy)
 	}
 
 }

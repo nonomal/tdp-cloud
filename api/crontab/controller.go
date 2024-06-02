@@ -3,13 +3,15 @@ package crontab
 import (
 	"github.com/gin-gonic/gin"
 
+	"tdp-cloud/model/cronjob"
 	"tdp-cloud/module/crontab"
-	"tdp-cloud/module/model/cronjob"
 )
+
+type Controller struct{}
 
 // 计划列表
 
-func list(c *gin.Context) {
+func (*Controller) list(c *gin.Context) {
 
 	var rq *cronjob.FetchAllParam
 
@@ -21,7 +23,10 @@ func list(c *gin.Context) {
 	rq.UserId = c.GetUint("UserId")
 
 	if lst, err := cronjob.FetchAll(rq); err == nil {
-		c.Set("Payload", gin.H{"Items": lst})
+		c.Set("Payload", gin.H{
+			"Items":   lst,
+			"Entries": crontab.GetEntries(lst),
+		})
 	} else {
 		c.Set("Error", err)
 	}
@@ -30,7 +35,7 @@ func list(c *gin.Context) {
 
 // 获取计划
 
-func detail(c *gin.Context) {
+func (*Controller) detail(c *gin.Context) {
 
 	var rq *cronjob.FetchParam
 
@@ -56,7 +61,7 @@ func detail(c *gin.Context) {
 
 // 添加计划
 
-func create(c *gin.Context) {
+func (*Controller) create(c *gin.Context) {
 
 	var rq *cronjob.CreateParam
 
@@ -68,7 +73,7 @@ func create(c *gin.Context) {
 	rq.UserId = c.GetUint("UserId")
 
 	if id, err := cronjob.Create(rq); err == nil {
-		crontab.NewById(id)
+		crontab.NewById(rq.UserId, id)
 		c.Set("Payload", gin.H{"Id": id})
 		c.Set("Message", "添加成功")
 	} else {
@@ -79,7 +84,7 @@ func create(c *gin.Context) {
 
 // 修改计划
 
-func update(c *gin.Context) {
+func (*Controller) update(c *gin.Context) {
 
 	var rq *cronjob.UpdateParam
 
@@ -96,7 +101,7 @@ func update(c *gin.Context) {
 	rq.UserId = c.GetUint("UserId")
 
 	if err := cronjob.Update(rq); err == nil {
-		crontab.RedoById(rq.Id)
+		crontab.RedoById(rq.UserId, rq.Id)
 		c.Set("Message", "修改成功")
 	} else {
 		c.Set("Error", err)
@@ -106,7 +111,7 @@ func update(c *gin.Context) {
 
 // 删除计划
 
-func delete(c *gin.Context) {
+func (*Controller) delete(c *gin.Context) {
 
 	var rq *cronjob.DeleteParam
 
@@ -122,7 +127,7 @@ func delete(c *gin.Context) {
 
 	rq.UserId = c.GetUint("UserId")
 
-	crontab.UndoById(rq.Id) //TODO:高危
+	crontab.UndoById(rq.UserId, rq.Id)
 
 	if err := cronjob.Delete(rq); err == nil {
 		c.Set("Message", "删除成功")

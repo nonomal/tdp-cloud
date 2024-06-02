@@ -1,6 +1,7 @@
 package midware
 
 import (
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -23,9 +24,9 @@ func CreateToken(userInfo *UserInfo) (string, error) {
 
 	claims := UserClaims{
 		jwt.RegisteredClaims{
-			Issuer: "TDP Cloud",
+			Issuer: args.AppName,
 			ExpiresAt: &jwt.NumericDate{
-				Time: time.Now().Add(7 * time.Hour),
+				Time: time.Now().Add(3 * time.Hour),
 			},
 		},
 		userInfo,
@@ -38,21 +39,37 @@ func CreateToken(userInfo *UserInfo) (string, error) {
 
 }
 
+func UpdateToken(signToken string) (string, error) {
+
+	claims, err := ParserToken(signToken)
+	if err != nil {
+		return "", err
+	}
+
+	claims.ExpiresAt.Time = time.Now().Add(3 * time.Hour)
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	jwtkey := args.Server.JwtKey
+	return token.SignedString([]byte(jwtkey))
+
+}
+
 func ParserToken(signToken string) (*UserClaims, error) {
 
-	var claims UserClaims
+	claims := &UserClaims{}
 
 	keyFunc := func(token *jwt.Token) (any, error) {
 		jwtkey := args.Server.JwtKey
 		return []byte(jwtkey), nil
 	}
 
-	token, err := jwt.ParseWithClaims(signToken, &claims, keyFunc)
+	token, err := jwt.ParseWithClaims(signToken, claims, keyFunc)
 
-	if token.Valid {
-		return &claims, nil
+	if err != nil || !token.Valid {
+		return nil, errors.New("invalid token")
 	}
 
-	return nil, err
+	return claims, nil
 
 }

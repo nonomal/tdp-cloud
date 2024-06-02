@@ -4,18 +4,11 @@ import (
 	"os"
 
 	"github.com/kardianos/service"
+	"github.com/opentdp/go-helper/logman"
 
-	"tdp-cloud/cmd/args"
-	"tdp-cloud/helper/logman"
 	"tdp-cloud/service/server"
 	"tdp-cloud/service/worker"
 )
-
-var statusMap = map[service.Status]string{
-	0: "Unknown",
-	1: "Running",
-	2: "Stopped",
-}
 
 func Control(name, act string) {
 
@@ -25,23 +18,23 @@ func Control(name, act string) {
 
 	switch name {
 	case "server":
-		svc = server.Service(cliArgs())
+		svc = server.Service(clearArgs())
 	case "worker":
-		svc = worker.Service(cliArgs())
+		svc = worker.Service(clearArgs())
 	default:
-		logman.Fatal("Unknown service", "name", name)
-	}
-
-	// 强制保存配置
-
-	if act == "" || act == "start" {
-		args.MustSave()
+		logman.Fatal("unknown service", "name", name)
 	}
 
 	// 执行服务动作
 
+	statusMap := map[service.Status]string{
+		0: "Unknown",
+		1: "Running",
+		2: "Stopped",
+	}
+
 	switch act {
-	case "": // 直接运行
+	case "":
 		if err := svc.Run(); err != nil {
 			logman.Fatal(svc.String(), "run", "failed", "error", err)
 		}
@@ -59,7 +52,7 @@ func Control(name, act string) {
 
 }
 
-func cliArgs() []string {
+func clearArgs() []string {
 
 	args := []string{}
 

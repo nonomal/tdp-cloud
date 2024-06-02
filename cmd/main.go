@@ -1,44 +1,39 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
-
 	"tdp-cloud/cmd/args"
-	"tdp-cloud/cmd/initd"
 	"tdp-cloud/cmd/subset"
 )
 
-var rcmd = &cobra.Command{
-	Use:     "tdp-cloud",
-	Short:   "TDP Cloud",
-	Long:    args.ReadmeText,
-	Version: args.Version,
-}
-
-func init() {
-
-	// 延迟执行
-
-	cobra.OnInitialize(
-		initd.Viper, initd.Dataset, initd.Logger,
-	)
-
-	// 全局参数
-
-	rcmd.PersistentFlags().StringVarP(&initd.ViperFile, "config", "c", "./config.yml", "配置文件路径")
-
-}
-
 func Execute() {
 
-	rcmd.AddCommand(
-		subset.WithServer(), subset.WithWorker(),
-	)
+	// 设置子命令集
 
-	if err := rcmd.Execute(); err != nil {
-		os.Exit(1)
+	flagsets := subset.NewFlagSets()
+
+	// 尝试解析子命令
+
+	if len(os.Args) > 1 {
+		if sub := flagsets[os.Args[1]]; sub != nil {
+			sub.Parse(os.Args[2:])
+			sub.Execute()
+			return
+		}
 	}
+
+	// 显示帮助信息
+
+	fmt.Printf("%s\n%s\n\n", args.AppName, args.AppSummary)
+	for k, v := range flagsets {
+		fmt.Printf("[%s] %s\n\n", k, v.Comment)
+		v.PrintDefaults()
+		fmt.Println()
+	}
+	fmt.Println(args.ReadmeText)
+
+	os.Exit(0)
 
 }

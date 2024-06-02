@@ -2,16 +2,18 @@ package alibaba
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/spf13/cast"
+	"github.com/opentdp/go-helper/alibaba"
+	"github.com/opentdp/go-helper/strutil"
 
-	"tdp-cloud/helper/alibaba"
-	"tdp-cloud/module/model/vendor"
+	"tdp-cloud/model/vendor"
 )
 
-func apiProxy(c *gin.Context) {
+type Controller struct{}
+
+func (*Controller) apiProxy(c *gin.Context) {
 
 	rq := &vendor.FetchParam{
-		Id:       cast.ToUint(c.Param("id")),
+		Id:       strutil.ToUint(c.Param("id")),
 		UserId:   c.GetUint("UserId"),
 		StoreKey: c.GetString("AppKey"),
 	}
@@ -21,9 +23,9 @@ func apiProxy(c *gin.Context) {
 		return
 	}
 
-	vd, err := vendor.Fetch(rq)
+	vdr, err := vendor.Fetch(rq)
 
-	if err != nil || vd.Id == 0 {
+	if err != nil || vdr.Id == 0 {
 		c.Set("Error", "厂商不存在")
 		return
 	}
@@ -31,8 +33,8 @@ func apiProxy(c *gin.Context) {
 	// 构造参数
 
 	param := &alibaba.ReqeustParam{
-		SecretId:  vd.SecretId,
-		SecretKey: vd.SecretKey,
+		SecretId:  vdr.SecretId,
+		SecretKey: vdr.SecretKey,
 	}
 
 	if err = c.ShouldBind(param); err != nil {

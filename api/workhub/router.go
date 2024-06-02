@@ -8,36 +8,39 @@ import (
 
 func Router(api *gin.RouterGroup) {
 
+	ctrl := &Controller{}
+
 	rg := api.Group("/workhub")
 
 	// 需授权接口
 
-	rg.Use(midware.AuthGuard())
+	rg.Use(midware.AuthGuard)
 
 	{
-		rg.POST("/list", list)
-		rg.POST("/detail/:id", detail)
-		rg.POST("/exec/:id", exec)
+		rg.POST("/list", ctrl.list)
 	}
 
 	// 管理员接口
 
-	rg.Use(midware.AdminGuard())
+	rg.Use(midware.AdminGuard)
 
 	{
-		rg.POST("/host", host)
-		rg.POST("/host/ip", hostIp)
+		rg.POST("/detail", ctrl.detail)
+		rg.POST("/exec", ctrl.exec)
+		rg.POST("/filer", ctrl.filer)
 	}
 
 }
 
 func Socket(wsi *gin.RouterGroup) {
 
+	ctrl := &Controller{}
+
 	rg := wsi.Group("/")
 
 	{
-		rg.GET("/workhub", register)
-		rg.GET("/workhub/:mid", register)
+		rg.GET("/workhub", ctrl.join)
+		rg.GET("/workhub/:mid", ctrl.join)
 	}
 
 }

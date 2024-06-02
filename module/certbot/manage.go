@@ -1,9 +1,10 @@
 package certbot
 
 import (
-	"tdp-cloud/helper/certmagic"
-	"tdp-cloud/module/model"
-	"tdp-cloud/module/model/certjob"
+	"github.com/opentdp/go-helper/certmagic"
+
+	"tdp-cloud/model"
+	"tdp-cloud/model/certjob"
 )
 
 func NewById(userId, id uint) {
@@ -53,7 +54,7 @@ func CertById(userId, id uint) (*model.Certjob, *certmagic.Certificate, error) {
 
 }
 
-func SetHistory(evt string, data map[string]any) {
+func UpdateHistory(evt string, data map[string]any) {
 
 	data["event"] = evt
 

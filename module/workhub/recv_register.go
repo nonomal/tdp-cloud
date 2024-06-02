@@ -1,34 +1,42 @@
 package workhub
 
 import (
-	"github.com/mitchellh/mapstructure"
-
-	"tdp-cloud/helper/logman"
+	"github.com/opentdp/go-helper/logman"
+	"github.com/opentdp/go-helper/socket"
 )
 
-func (pod *RecvPod) Register(rq *SocketData) error {
+func (pod *RecvPod) Register(rq *socket.PlainData) error {
 
-	logman.Info("Register:recv", "from", pod.Conn.RemoteAddr())
+	var (
+		err    error
+		worker = pod.Worker
+	)
+
+	logman.Info("register:recv", "from", pod.Conn.RemoteAddr())
 
 	// 注册主机
 
-	worker := pod.Worker
+	if err = rq.GetPayload(worker); err != nil {
+		pod.Die("register:error " + err.Error())
+	}
+
+	if worker.WorkerId == "" {
+		pod.Die("register:error WorkerId is empty")
+	}
+
+	if err = updateMachine(worker); err != nil {
+		pod.Die("register:error " + err.Error())
+	}
+
 	workerPool[worker.WorkerId] = worker
-
-	if err := mapstructure.Decode(rq.Payload, worker); err != nil {
-		pod.Die("Register:error " + err.Error())
-	}
-
-	if err := updateMachine(worker); err != nil {
-		pod.Die("Register:error " + err.Error())
-	}
 
 	// 返回结果
 
-	err := pod.WriteJson(&SocketData{
+	err = pod.WriteJson(&socket.PlainData{
 		Method:  "Register:resp",
 		TaskId:  rq.TaskId,
-		Payload: "OK",
+		Success: true,
+		Payload: "OK, Id: " + worker.WorkerId,
 	})
 
 	return err

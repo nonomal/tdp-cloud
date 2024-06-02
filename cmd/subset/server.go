@@ -1,32 +1,41 @@
 package subset
 
 import (
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"flag"
 
+	"tdp-cloud/cmd/parse"
 	"tdp-cloud/service"
 )
 
-var serverAct string
+var serverYaml string
 
-var serverCmd = &cobra.Command{
-	Use:   "server",
-	Short: "服务端管理",
-	Run: func(cmd *cobra.Command, args []string) {
-		service.Control("server", serverAct)
-	},
+func serverFlag() *FlagSet {
+
+	var action string
+
+	command := &FlagSet{
+		FlagSet: flag.NewFlagSet("server", flag.ExitOnError),
+		Comment: "TDP Cloud Server Management",
+		Execute: func() {
+			serverExec(action)
+		},
+	}
+
+	command.StringVar(&action, "s", "", "management server service")
+	command.StringVar(&serverYaml, "c", "", "config file path")
+
+	return command
+
 }
 
-func WithServer() *cobra.Command {
+func serverExec(act string) {
 
-	serverCmd.Flags().BoolP("help", "h", false, "查看帮助")
-	serverCmd.Flags().MarkHidden("help")
+	c := parse.ServerConfig(serverYaml)
 
-	serverCmd.Flags().StringVarP(&serverAct, "service", "s", "", "管理系统服务")
-	serverCmd.Flags().StringP("listen", "l", ":7800", "服务端监听的IP地址和端口")
+	if act == "" || act == "start" {
+		c.Save()
+	}
 
-	viper.BindPFlag("server.listen", serverCmd.Flags().Lookup("listen"))
-
-	return serverCmd
+	service.Control("server", act)
 
 }

@@ -1,45 +1,64 @@
 package server
 
 import (
-	"github.com/kardianos/service"
+	"github.com/opentdp/go-helper/dborm"
+	"github.com/opentdp/go-helper/httpd"
 
+	"tdp-cloud/api"
+	"tdp-cloud/cmd/args"
 	"tdp-cloud/module/certbot"
-	"tdp-cloud/module/dborm"
-	"tdp-cloud/module/httpd"
+	"tdp-cloud/module/crontab"
 	"tdp-cloud/module/migrator"
 )
 
-type program struct{}
+func origin() {
 
-func (p *program) Start(s service.Service) error {
+	dbConnect()
 
-	svclog.Info("TDP Server start")
+	go certbot.Daemon()
+	go crontab.Daemon()
 
-	go p.run()
-	return nil
-
-}
-
-func (p *program) Stop(s service.Service) error {
-
-	svclog.Info("TDP Server stop")
-
-	return nil
+	go httpServer()
 
 }
 
-func (p *program) run() {
+func dbConnect() {
 
 	// 连接数据库
-	dborm.Connect()
+	dborm.Connect(&dborm.Config{
+		Type:     args.Gormio.Type,
+		Host:     args.Gormio.Host,
+		User:     args.Gormio.User,
+		Password: args.Gormio.Passwd,
+		DbName:   args.Gormio.Name,
+		Option:   args.Gormio.Option,
+	})
 
 	// 实施自动迁移
 	migrator.Deploy()
 
-	// 启动证书服务
-	certbot.Daemon()
+	// 开启外键约束
+	if args.Gormio.Type == "sqlite" {
+		dborm.Db.Exec("PRAGMA foreign_keys=ON;")
+	}
 
-	// 启动HTTP服务
-	httpd.Daemon()
+}
+
+func httpServer() {
+
+	// 初始化
+	engine := httpd.Engine(args.Debug)
+
+	// 接口路由
+	api.Router(engine)
+
+	// 上传文件路由
+	httpd.Static("/upload", args.Assets.Dir+"/upload")
+
+	// 前端文件路由
+	httpd.StaticEmbed("/", "front", args.Efs)
+
+	// 启动服务
+	httpd.Server(args.Server.Listen)
 
 }
